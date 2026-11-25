@@ -26,11 +26,10 @@ Purpose: make the plan visible as well as readable. Diagrams show only what has 
    Only add a diagram that shows something the existing ones don't. Propose it to the user in one line (what it shows and why) and draw it once they agree.
 5. **Write** each new diagram as `docs/planning/diagrams/NN-short-name.md` (next free number). Give it a title, one sentence on what it shows, a "Based on decisions up to D-xxx" line, and one Mermaid block. Add it to the list in `docs/planning/diagrams/README.md`.
 6. **Render and check** every new or changed diagram (command below). Fix any syntax error, then open the PNG with the Read tool and check the layout: no clipped or awkwardly split text, readable arrows, nothing overlapping. Adjust and re-render until it reads well.
-7. **Commit, push and make sure a pull request exists.** The user wants this every time diagrams are drawn.
+7. **Raise a new pull request.** The user wants this every time diagrams are drawn, following the Git workflow in `CLAUDE.md`.
+   - Fetch, then create a new branch from the latest `origin/main` (e.g. `planning/<area>`). Never reuse a branch whose pull request is open or merged.
    - Commit the diagrams (sources and PNGs) together with the planning records changed in the same interview (`decisions.md`, `open-questions.md`, diagrams README).
-   - Never commit to `main`. If the current branch is `main`, create `planning/<area>` first.
-   - Push the branch. Never force-push.
-   - If the branch has no open pull request on GitHub (`jackbowden-ai/open-attack-path`), open one against `main` that summarises the decisions and diagram changes. Use `gh` if it's installed. Otherwise use the GitHub REST API with the credential Git already stores (`git credential fill` for host `github.com`), passing the token straight into the request and never printing it.
+   - Push the new branch (never force-push) and open a new pull request against `main` that summarises the decisions and diagram changes. Use `gh` if it's installed. Otherwise use the GitHub REST API with the credential Git already stores (`git credential fill` for host `github.com`), passing the token straight into the request and never printing it.
 8. **Report** which diagrams were added or updated, what changed in each, which OPEN placeholders remain, and the pull request link.
 
 ## Conventions
