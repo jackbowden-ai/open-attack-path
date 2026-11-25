@@ -1,6 +1,6 @@
 # End-to-end workflow
 
-What the user does before and after open-attack-path, with the tool as one block. Based on decisions up to D-013. Dashed boxes are not decided yet.
+What the user does before and after open-attack-path, with the tool as one block. Based on decisions up to D-029. Dashed boxes are not decided yet.
 
 ```mermaid
 ---
@@ -15,8 +15,8 @@ flowchart LR
     q6["OPEN Q-006<br/>What if the report was made<br/>without these flags?"]
     key[/"Optional NVD API key (D-012)"/]
     tool["2. You run open-attack-path<br/>on the report"]
-    sources[("Online sources, queried every run<br/>NVD, FIRST EPSS, CISA KEV<br/>(D-009, D-010)")]
-    out[/"Attack-path report<br/>format and audience: OPEN"/]
+    sources[("Online sources, queried every run<br/>FIRST EPSS, CISA KEV (D-009, D-010)<br/>NVD to fill gaps, every CVE with a key (D-024)")]
+    out[/"Attack-path report<br/>chains ranked by likelihood × impact (D-026)<br/>format and layout: OPEN"/]
     act["3. You read which attack paths<br/>are possible in your project"]
 
     repo --> trivy --> report --> tool
