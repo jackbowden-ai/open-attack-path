@@ -20,23 +20,11 @@ Entry format:
 - Blocks: Attacker model design (starting positions), and how confidently the report can state an attacker's entry point.
 - Notes: D-008 says exposure is inferred from dependencies "initially". Options discussed: user-supplied profile, infer + user override.
 
-## Q-002: When should the engine consult NVD?
-- Area: Inputs and detection
+## Q-003: Should dev/build dependencies count when inferring the app's exposure?
+- Area: Attacker model
 - Type: question
-- Blocks: Enrichment design and run time (NVD is rate-limited, D-012).
-- Notes: D-009 says "pull any detail from NVD if we think it will help". Depends on what the chain model needs that Trivy's JSON lacks. Trivy vulnerability entries already carry `CweIDs` and per-source CVSS vectors (vuln-data skill), so NVD may only be needed where those are missing. Measure on a real report with `/trivy-inspect`. Decide during the chain model area.
-
-## Q-003: How should dev/build dependencies affect exposure inference and chain reachability?
-- Area: Chain model / Attacker model
-- Type: question
-- Blocks: Exposure inference (D-008) and chain construction.
-- Notes: D-004 includes dev dependencies, so a test-only HTTP server package could wrongly suggest the app is network-facing, and a dev-only CVE may not be reachable in production. Possible answers: exclude dev deps from exposure inference, label chains that pass through dev deps, or treat them as build-time/supply-chain chains only. Fact (vuln-data skill): Trivy marks packages `Dev: true` only for some ecosystems (npm, yarn, pnpm v9+, Bun, Poetry, uv, gradle). pip `requirements.txt` and Pipenv have no dev distinction, so for those the tool can't tell dev from runtime at all.
-
-## Q-004: How is a chain's combined severity calculated?
-- Area: Chain model / Report
-- Type: question
-- Blocks: Chain ranking and report layout.
-- Notes: D-005: "two separate CVEs amount to a more severe CVE". Candidates include severity of the final capability gained, a composite of step CVSS/EPSS/KEV, or a qualitative rating.
+- Blocks: Exposure inference (D-008).
+- Notes: The chain part was resolved by D-028 (runtime and build-time chains are separate; unknown packages assumed runtime). Still open: a test-only HTTP server package could wrongly suggest the app is network-facing. Likely follows D-028 (infer from runtime dependencies only), but not yet asked.
 
 ## Q-005: Which Trivy versions / JSON schema versions must be supported?
 - Area: Inputs and detection
@@ -50,20 +38,44 @@ Entry format:
 - Blocks: Input validation, and whether the report can claim to cover misconfigurations and dev dependencies.
 - Notes: Trivy's defaults conflict with D-003/D-004. Misconfig scanning is off by default and dev dependencies are excluded by default. The needed command is `trivy fs --scanners vuln,secret,misconfig --include-dev-deps --format json -o report.json <repo>`. The JSON doesn't record which flags were used, so the tool can only infer (e.g. no `config` results, no `Dev: true` packages). Options: warn, refuse, or just document the required command.
 
-## Q-007: How are findings without a CVE ID handled?
-- Area: Inputs and detection
-- Type: question (needs confirming on a real report)
-- Blocks: Enrichment (D-009): EPSS, KEV and NVD are all keyed by CVE ID.
-- Notes: Trivy can report advisories by other IDs (e.g. GHSA-…) when no CVE exists. Misconfigurations and secrets never have CVEs or CWEs. These need their own way of saying what they require and give an attacker.
-
-## Q-008: Which CWE level should chaining reason at?
-- Area: Chain model
-- Type: question
-- Blocks: How links between findings are decided (D-005, D-009).
-- Notes: Real data shows CVEs mapped to several CWEs at different levels. Log4Shell has CWE-20 (broad, Class level, CanPrecede 5 other weaknesses, very general consequences) plus CWE-917 (specific, "Execute Unauthorized Code or Commands"). Linking on broad CWEs could connect almost anything. Options include preferring the most specific CWE, combining all, or weighting by abstraction level. To be covered in the chain model area.
-
 ## Q-009: Is open-attack-path static-only, or will it ever validate chains against running systems?
 - Area: Scope and safety
 - Type: question
 - Blocks: Scope statement in the README, the confidence design, and safety rules.
 - Notes: The original README describes "static vulnerability analysis", and all decisions so far reason over a Trivy report only. On 2026-11-25 the user chose to leave this out of the README mission statement until the scope and safety interview.
+
+## Q-010: What is the capability list, and how do CWE impacts and CVSS translate into it?
+- Area: Chain model
+- Type: question
+- Blocks: Capability matching (D-016, D-020, D-021), the curated misconfiguration/secret table, and impact values (Q-011).
+- Notes: D-023 says to draft it from real data. Needs a Trivy report from one of the user's projects: `trivy fs --scanners vuln,secret,misconfig --include-dev-deps --format json -o report.json <repo>`, then `/trivy-inspect` and `/cve-lookup` on its CVEs. Trivy isn't installed on this machine yet.
+
+## Q-011: What are the numeric values in scoring?
+- Area: Chain model
+- Type: question
+- Blocks: Link confidence (D-022) and chain scores (D-026, D-027).
+- Notes: Still to set: CWE weights for specificity, source and MITRE guidance; the KEV minimum likelihood; fixed likelihoods per misconfiguration/secret category; impact value per capability. Best set after Q-010 and checked against test targets with known chains (testing area).
+
+## Q-012: Which capabilities count as attacker goals, and where can an attacker start?
+- Area: Attacker model
+- Type: question
+- Blocks: Which chains are reported (D-025), and what the first step of a chain may require.
+- Notes: Chains must end in a goal (D-025), but the goal list isn't defined. A starting position wasn't required for a chain to be reported, but the first step's "requires" (e.g. network access) must still be met by something; how that's satisfied belongs with the attacker model and exposure inference (D-008).
+
+## Q-013: What goals do build-time chains end in, and how are they reported?
+- Area: Attacker model / Report
+- Type: question
+- Blocks: Build-time chains (D-028).
+- Notes: Build-time (supply-chain) chains through dev dependencies are separate from runtime chains. Their goals (e.g. compromising the build or developer machines) and how they appear in the report aren't decided.
+
+## Q-014: How is MITRE CWE data obtained?
+- Area: Inputs and detection / Operation
+- Type: question
+- Blocks: Capability derivation (D-020), CWE weighting (D-022) and CWE relationship evidence (D-016).
+- Notes: Found while drawing the pipeline diagram. CWE consequences, relationships, abstraction level and mapping guidance all come from MITRE, but D-010 ("fetched live every run") only covers NVD, EPSS and KEV. Options include the CWE REST API per run (no key needed), or the downloadable CWE catalogue (`cwec_latest.xml.zip`) refreshed on a schedule. See the vuln-data skill.
+
+## Q-015: Can misconfigurations and secrets be steps in runtime chains, build-time chains, or both?
+- Area: Chain model
+- Type: question
+- Blocks: Chain building (D-028) for non-dependency findings.
+- Notes: Found while drawing the step decision tree. D-028 sorts dependencies into runtime or build-time chains, but misconfigurations and secrets aren't packages. A secret in a CI config or a Dockerfile build stage might belong in build-time chains, while one in application config belongs in runtime chains. Options include both, by file location, or by category in the curated table (D-021).

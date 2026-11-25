@@ -1,6 +1,6 @@
 # Internal pipeline
 
-The stages inside open-attack-path, from Trivy JSON in to report out, with the data passed between them. Based on decisions up to D-013. Stage order shows data dependencies only; how the stages are built is not decided.
+The stages inside open-attack-path, from Trivy JSON in to report out, with the data passed between them. Based on decisions up to D-029. Stage order shows data dependencies only; how the stages are built is not decided.
 
 ```mermaid
 ---
@@ -16,21 +16,26 @@ flowchart TB
     d2a[/"Findings: 3 kinds"/]
     d2b[/"Package list, incl. dev dependencies (D-004)"/]
 
-    s3["3. Enrich findings (D-009)<br/>CVE to CWE, EPSS score, KEV status<br/>queried live every run (D-010)<br/>OPEN: when to call NVD (Q-002)<br/>OPEN: findings without a CVE ID (Q-007)"]
+    s3["3. Enrich findings (D-009)<br/>CWEs, EPSS score, KEV status, queried live every run (D-010)<br/>NVD only to fill gaps, or for every CVE when an API key is set (D-024)"]
     ext[("NVD API, optional key (D-012)<br/>FIRST EPSS API<br/>CISA KEV feed")]
     d3a[/"Enriched findings"/]
-    d3b[/"Data gaps: sources that failed (D-011)"/]
+    d3b[/"Data gaps: sources that failed (D-011)<br/>NVD mode used (D-024)"/]
 
-    s4["4. Infer app exposure from dependencies (D-008)<br/>labelled as inferred<br/>OPEN: user override (Q-001)<br/>OPEN: effect of dev dependencies (Q-003)"]
+    s4["4. Infer app exposure from dependencies (D-008)<br/>labelled as inferred<br/>OPEN: user override (Q-001)<br/>OPEN: do dev dependencies count (Q-003)"]
     d4[/"Inferred exposure profile"/]
 
-    s5["5. Build chains: OPEN<br/>what a chain is: D-005<br/>how findings link, CWE level: Q-008<br/>attacker model: not yet discussed"]
-    d5[/"Candidate chains"/]
+    s5["5. Assign capabilities to each finding<br/>vulnerabilities: requires from CVSS,<br/>gives from CWE consequences and CVSS impact (D-020)<br/>misconfigurations and secrets: curated table,<br/>generic fallback at lower confidence (D-021)<br/>every CWE kept, weighted by specificity,<br/>source and MITRE guidance (D-022)<br/>OPEN: the capability list (Q-010)"]
+    cwe[("MITRE CWE data<br/>consequences, relationships, mapping guidance<br/>OPEN: how it is obtained (Q-014)")]
+    tbl[/"Curated table: misconfiguration and secret<br/>capabilities and likelihoods (D-021, D-027)<br/>OPEN: contents (Q-010, Q-011)"/]
+    d5[/"Findings with requires and gives,<br/>plus link confidence"/]
 
-    s6["6. Score and rank chains: OPEN (Q-004)"]
-    d6[/"Ranked chains"/]
+    s6["6. Build chains (D-016)<br/>A links to B when A gives what B requires<br/>CWE links shown as evidence<br/>report findings only (D-017)<br/>2 to 3 findings by default, configurable (D-018, D-019)<br/>must end in an attacker goal (D-025)<br/>no repeated findings, reorderings collapsed (D-029)<br/>runtime and build-time chains kept separate (D-028)<br/>OPEN: goals and start positions (Q-012)<br/>OPEN: build-time goals (Q-013)"]
+    d6[/"Candidate chains: runtime and build-time"/]
 
-    s7["7. Write the report: OPEN<br/>format and audience not yet discussed<br/>already required: secrets redacted (D-013),<br/>data gaps listed (D-011), exposure marked as inferred (D-008)"]
+    s7["7. Score and rank chains (D-026)<br/>score = likelihood × impact, likelihood = product of step likelihoods<br/>step likelihood: EPSS, KEV raised to a floor, otherwise fixed per category (D-027)<br/>impact from the final capability, link confidence shown separately<br/>OPEN: numeric values (Q-011)"]
+    d7[/"Ranked chains"/]
+
+    s8["8. Write the report: OPEN<br/>format and layout not yet discussed<br/>already required:<br/>secrets redacted (D-013)<br/>data gaps and NVD mode stated (D-011, D-024)<br/>exposure marked as inferred (D-008)<br/>link confidence shown (D-022)<br/>readable by technical and non-specialist readers (D-015)"]
     out[/"Attack-path report"/]
 
     in --> s1 --> s2
@@ -42,10 +47,16 @@ flowchart TB
     s3 --> d3b
     d2b --> s4 --> d4
     d3a --> s5
-    d4 --> s5
-    s5 --> d5 --> s6 --> d6 --> s7
-    d3b --> s7
-    s7 --> out
+    cwe --> s5
+    tbl --> s5
+    s5 --> d5 --> s6
+    d2b -->|"dev or runtime (D-028)"| s6
+    d4 -.->|"role in chains: OPEN Q-012"| s6
+    s6 --> d6 --> s7
+    tbl --> s7
+    s7 --> d7 --> s8
+    d3b --> s8
+    s8 --> out
 
     subgraph legend["Key"]
         direction LR
@@ -61,9 +72,9 @@ flowchart TB
     classDef open fill:#fff4e5,stroke:#d97706,stroke-dasharray:5 5,color:#111
     classDef data fill:#f3f4f6,stroke:#6b7280,color:#111
     classDef external fill:#ecfdf5,stroke:#059669,color:#111
-    class s2,k1 decided
-    class s1,s3,s4,k2 partial
-    class s5,s6,s7,k3 open
-    class in,d2a,d2b,d3a,d3b,d4,d5,d6,out,k4 data
-    class ext,k5 external
+    class s2,s3,k1 decided
+    class s1,s4,s5,s6,s7,k2 partial
+    class s8,k3 open
+    class in,d2a,d2b,d3a,d3b,d4,d5,d6,d7,out,tbl,k4 data
+    class ext,cwe,k5 external
 ```
