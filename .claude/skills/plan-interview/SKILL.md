@@ -22,6 +22,7 @@ The goal is to surface every decision that would change the design, and get the 
    - Each answer → a new entry in `docs/planning/decisions.md` using the format in that file.
    - Each unanswered question, "not sure yet", or assumption → `docs/planning/open-questions.md`, noting what it blocks.
 7. **Play it back.** Summarise the decisions from this session in a few bullets and ask the user to confirm or correct them.
+8. **Draw.** Once the user has confirmed, run `/draw-workflow` for the area just covered, so the diagrams in `docs/planning/diagrams/` reflect the new decisions.
 
 ## Rules
 
