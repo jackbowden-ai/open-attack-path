@@ -61,3 +61,9 @@ Entry format:
 - Type: question
 - Blocks: How links between findings are decided (D-005, D-009).
 - Notes: Real data shows CVEs mapped to several CWEs at different levels. Log4Shell has CWE-20 (broad, Class level, CanPrecede 5 other weaknesses, very general consequences) plus CWE-917 (specific, "Execute Unauthorized Code or Commands"). Linking on broad CWEs could connect almost anything. Options include preferring the most specific CWE, combining all, or weighting by abstraction level. To be covered in the chain model area.
+
+## Q-009: Is open-attack-path static-only, or will it ever validate chains against running systems?
+- Area: Scope and safety
+- Type: question
+- Blocks: Scope statement in the README, the confidence design, and safety rules.
+- Notes: The original README describes "static vulnerability analysis", and all decisions so far reason over a Trivy report only. On 2026-11-25 the user chose to leave this out of the README mission statement until the scope and safety interview.
