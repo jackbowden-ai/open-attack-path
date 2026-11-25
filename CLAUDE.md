@@ -28,4 +28,11 @@ The user wants extensive planning before anything is built.
 - `docs/planning/open-questions.md` — unresolved questions and unconfirmed assumptions, each noting what it blocks.
 - `docs/planning/plan.md` — the plan itself, written once enough decisions exist. Its status line says whether it is draft or approved.
 
+## Git workflow
+
+- Every set of changes goes on a **new branch created from the latest `origin/main`** and gets **its own new pull request** against `main` (repo `jackbowden-ai/open-attack-path`). Never add commits to a branch whose pull request is open or merged; the user merges quickly, and later pushes to an old branch never reach `main`.
+- Never commit to `main` directly. Never force-push.
+- Open pull requests with `gh` if it's installed. Otherwise use the GitHub REST API with the credential Git already stores (`git credential fill` for host `github.com`), passing the token straight into the request and never printing it.
+- After opening the pull request, switch the local checkout to that branch, so the working folder has the latest files.
+
 When code exists, re-run `/init` to add build/test commands and architecture notes here.
