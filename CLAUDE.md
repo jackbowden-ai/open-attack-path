@@ -15,6 +15,7 @@ The user wants extensive planning before anything is built.
 - Use the project skills:
   - `/plan-interview` — structured question rounds before deciding anything about an area (scope, chain model, report format, etc.). Use it whenever a new topic comes up, not only when asked.
   - `/plan-challenge` — adversarial review of a draft plan or design before the user approves it.
+  - `/draw-workflow` — draws or updates Mermaid diagrams in `docs/planning/diagrams/` from the decisions (workflows, data models, sequences, decision trees) and renders PNGs. Runs at the end of every `/plan-interview`.
   - `/vuln-data` — verified reference on Trivy JSON, NVD, EPSS, KEV, CWE and CAPEC. Use it instead of memory when a decision depends on what these sources contain.
   - `/cve-lookup <CVE-ID>` — live NVD/EPSS/KEV/CWE data for one CVE, to test chain-model ideas on real vulnerabilities.
   - `/trivy-inspect <report.json>` — summarises a real Trivy report (coverage, gaps, mismatches with decisions) without showing secret values.
