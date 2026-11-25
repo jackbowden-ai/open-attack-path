@@ -120,3 +120,19 @@ Entry format:
 - Decision: Show only secret type, file:line and Trivy rule; never the value, even partially.
 - Reason: User chose the recommended option: a chain only needs to know a secret exists and where.
 - Consequences: The report is safe to share or commit. Redaction must also cover any intermediate output and logs.
+
+## D-014: open-attack-path is a personal project
+- Date: 2026-11-25
+- Area: Scope and safety
+- Question: Who is open-attack-path for?
+- Decision: A personal project, built for the user's own use and learning. Public, but not aimed at other users yet.
+- Reason: User's choice ("Personal project").
+- Consequences: README is written as a personal project. No onboarding, multi-user or distribution requirements for now. Complements D-006 (it analyses the user's own projects).
+
+## D-015: What the report should help its reader do
+- Date: 2026-11-25
+- Area: Report
+- Question: What should the report help someone do once they've read it?
+- Decision: All four: see combined risk that per-finding severity hides; prioritise fixes based on which chains are possible, not only individual CVSS scores; explain to non-specialists how an attacker could get in; learn how vulnerability chaining works in real dependency trees.
+- Reason: User selected all four outcomes; they form the README mission statement.
+- Consequences: The report must serve both technical readers (prioritising fixes) and non-specialists (understanding risk). This partly answers report audience, which is otherwise still to be discussed. Format and layout remain open.
