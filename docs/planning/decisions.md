@@ -248,3 +248,132 @@ Entry format:
 - Decision: A finding appears at most once per chain. Chains using the same set of findings in a different order are collapsed to the highest-scoring order.
 - Reason: User's choice ("No repeats, collapse sets").
 - Consequences: No cycles. The report shows each set of findings once.
+
+## D-030: Runtime attacker goals
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: Which outcomes count as attacker goals, so that a chain ending in one is reported (D-025)?
+- Decision: Code execution; reading sensitive data; changing data or code; taking the service down (denial of service); privilege escalation; credential theft. The last two are set by D-031.
+- Reason: User selected all four outcome options, and chose "Both are goals" for privilege escalation and credential theft.
+- Consequences: Resolves the goals part of Q-012. A broad goal list means more chains are reported, including short ones and denial-of-service chains; ranking by impact order (D-041) keeps the serious ones at the top.
+
+## D-031: Privilege escalation and credential theft are goals, not only stepping stones
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: Can a chain end at privilege escalation or credential theft, or must it continue to a final outcome?
+- Decision: Both count as goals, so chains may end there. They can still appear mid-chain when a later step requires them.
+- Reason: User's choice ("Both are goals").
+- Consequences: Chains such as "misconfiguration → leaked API key" are reported even though findings-only chains (D-017) usually can't continue past a credential. They rank below code execution and data access (D-041).
+
+## D-032: Four attacker starting positions
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: Which starting positions does the engine model?
+- Decision: Remote with no account; logged-in user; local on the host; upstream package (a malicious or hijacked dependency or registry).
+- Reason: User selected all four.
+- Consequences: Resolves the starting-position part of Q-012. Starting positions are capabilities the attacker holds before the first step; a chain's first step must require only capabilities a starting position provides. Insider and physical-access positions are not modelled (physical: D-039).
+
+## D-033: Chains whose start isn't available are reported, sorted below all others
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: What happens when a chain's first step needs a starting position that the inferred or overridden exposure doesn't provide?
+- Decision: The chain is still reported, but every such chain is sorted after every chain with an available start, then by score within each group. The report states the position the chain needs.
+- Reason: User's choices ("Report, ranked lower"; then "Always below" over a likelihood penalty or a separate section).
+- Consequences: Keeps D-025 (no plausible start required to report a chain). Adds a sort rule on top of the D-026 score without changing the score itself. A severe chain with an unavailable start can sit below many minor ones, so the report layout should make the group boundary visible.
+
+## D-034: "Local on the host" is available only when inferred or overridden
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: When does the local position count as available?
+- Decision: Only when the exposure rules infer a local or multi-user context from runtime dependencies (e.g. a CLI tool), or the override (D-037) sets it. Otherwise local access can only be gained through a chain step.
+- Reason: User's choice ("Inferred").
+- Consequences: CVSS local-vector CVEs appear mid-chain, or as first steps with an unavailable start (D-033), unless local context is inferred. Needs inference rules (D-043).
+
+## D-035: "Logged-in user" is available whenever remote access is
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: What signals that the app has user accounts an attacker could hold?
+- Decision: If the remote position is available, the logged-in position is too.
+- Reason: User's choice ("With remote access").
+- Consequences: No auth-library detection needed. May overstate for network-facing apps with no accounts; the override (D-037) can turn it off.
+
+## D-036: Exposure is inferred from runtime dependencies only, with an optional override
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: How is exposure worked out beyond "infer from dependencies" (Q-001, Q-003)?
+- Decision: Infer exposure only from runtime dependencies (dev dependencies are ignored for inference, matching D-028), and let the user correct it with an optional exposure setting in config. Packages Trivy can't classify count as runtime (D-028).
+- Reason: User chose the recommended option ("Runtime deps + override"): wrong inferences are cheap to correct on the user's own projects.
+- Consequences: Resolves Q-001 and Q-003. The report must say whether each position came from inference or from the override.
+- Supersedes: D-008 (in part: exposure is no longer inference-only, and dev dependencies are excluded from inference)
+
+## D-037: The exposure override sets an app type and per-position adjustments
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: What can the exposure override set?
+- Decision: An app type (e.g. web service, CLI, library, background worker) that implies a set of positions, plus optional on/off adjustments to individual positions on top of it.
+- Reason: User's choice ("Both").
+- Consequences: Needs an app-type → positions table, documented alongside the inference rules. Per-position settings take precedence over the app type, and both take precedence over inference.
+
+## D-038: Build-time chain goals
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: Which goals do build-time (supply-chain) chains end in (Q-013)?
+- Decision: Code execution on a developer or CI machine; stealing build-time secrets (CI secrets, registry tokens, deploy keys); tampering with the built artifact or published package. The runtime goals (D-030, D-031) also count when applied to the build environment.
+- Reason: User selected all four options, including "Same as runtime".
+- Consequences: Resolves the goals part of Q-013. How build-time chains are presented stays open (Q-013, narrowed). Order in D-042.
+
+## D-039: How CVSS attack vector maps onto starting positions
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: How are the CVSS attack-vector values used?
+- Decision: Network → remote. Adjacent network → remote (a small overstatement). Local → local on the host. Physical → excluded: CVEs that need physical access are never chain steps.
+- Reason: User's choice ("Adjacent=remote, Physical=out").
+- Consequences: The position list stays at four (D-032). Physical-access CVEs never appear in the report.
+
+## D-040: Steps needing victim interaction are allowed, with reduced likelihood
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: How are steps whose CVSS says "user interaction: required" treated?
+- Decision: They can appear anywhere in a chain; their likelihood is multiplied by a reduction factor.
+- Reason: User's choice ("Allowed, lower likelihood").
+- Consequences: Refines D-027: such a step's likelihood is its D-027 likelihood times this factor. The factor's value, and whether the KEV floor applies before or after it, are added to Q-011.
+
+## D-041: Runtime goals are ranked by a fixed impact order
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: How does impact differ between goals?
+- Decision: Code execution > reading sensitive data ≈ changing data or code > privilege escalation ≈ credential theft > taking the service down.
+- Reason: User chose the recommended order: midpoint goals (D-031) rank below final outcomes, and denial of service is last because many CVEs give only that.
+- Consequences: Sets the order of impact values for D-026; the numbers stay in Q-011 and must respect this order.
+
+## D-042: Build-time goal order
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: Where do build-time goals rank, against each other and against runtime goals?
+- Decision: Tampering with the shipped artifact ranks equal to code execution (it reaches production and users) > code execution on a developer or CI machine > stealing build secrets. The runtime order (D-041) applies to the rest.
+- Reason: User's choice ("Tamper output on top").
+- Consequences: Build-time and runtime chains share one impact scale, so their scores can be compared. Numbers stay in Q-011.
+
+## D-043: Exposure inference rules are drafted from real data
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: Where do the dependency → position rules come from?
+- Decision: Drafted together with the capability list (Q-010, D-023) from a real Trivy report of one of the user's projects, then extended.
+- Reason: User chose the recommended option ("From real data"): the same approach as the capability list.
+- Consequences: Exposure inference, and the app-type table (D-037), are blocked on Q-010 (a real Trivy report).
+
+## D-044: The upstream position can start both build-time and runtime chains
+- Date: 2026-11-26
+- Area: Attacker model
+- Question: Does the upstream-package position start only build-time chains?
+- Decision: It can start either kind: a malicious runtime dependency can start a runtime chain.
+- Reason: User's choice ("Both").
+- Consequences: Runtime chains starting from upstream depend on Trivy reporting malicious-package advisories, which is unconfirmed (Q-016).
+
+## D-045: Misconfigurations and secrets can be steps in both runtime and build-time chains
+- Date: 2026-11-26
+- Area: Chain model
+- Question: How are misconfigurations and secrets assigned to runtime or build-time chains (Q-015)?
+- Decision: Every misconfiguration and secret can appear in either kind of chain. No file-location rules and no extra column in the curated table.
+- Reason: User's choice ("Both chain types").
+- Consequences: Resolves Q-015. The simplest option, but it may produce build-time chains through runtime-only settings (and the reverse), which the report reader has to judge.
