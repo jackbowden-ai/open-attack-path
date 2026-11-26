@@ -61,3 +61,9 @@ Entry format:
 - Type: assumption
 - Blocks: Runtime and build-time chains that start from the upstream-package position (D-044).
 - Notes: Unconfirmed assumption behind D-044: that a Trivy filesystem scan flags known-malicious packages (e.g. OSV "MAL-" advisories), so an upstream start can be tied to a real finding as D-017 requires. If it doesn't, the upstream position can only be satisfied by the override (D-037) and needs another trigger. Check with `/vuln-data` and against a real report (Q-010).
+
+## Q-017: When does the upstream-package position count as available?
+- Area: Attacker model
+- Type: question
+- Blocks: Whether chains starting from the upstream position sort with the main list or below it (D-033).
+- Notes: Found while drawing the attacker model diagram. Remote, logged-in and local each have an availability rule (D-034, D-035, D-036), but upstream doesn't. Options include: always available (any project can pull a hijacked package), only when the report contains a malicious-package finding (ties to Q-016), or only through the override (D-037).
