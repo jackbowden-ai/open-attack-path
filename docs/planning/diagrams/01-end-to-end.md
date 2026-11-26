@@ -1,6 +1,6 @@
 # End-to-end workflow
 
-What the user does before and after open-attack-path, with the tool as one block. Based on decisions up to D-029. Dashed boxes are not decided yet.
+What the user does before and after open-attack-path, with the tool as one block. Based on decisions up to D-045. Dashed boxes are not decided yet.
 
 ```mermaid
 ---
@@ -14,14 +14,16 @@ flowchart LR
     report[/"Trivy JSON report<br/>one file per run (D-001)"/]
     q6["OPEN Q-006<br/>What if the report was made<br/>without these flags?"]
     key[/"Optional NVD API key (D-012)"/]
+    ovr[/"Optional exposure override in config<br/>app type, plus on/off per<br/>starting position (D-036, D-037)"/]
     tool["2. You run open-attack-path<br/>on the report"]
     sources[("Online sources, queried every run<br/>FIRST EPSS, CISA KEV (D-009, D-010)<br/>NVD to fill gaps, every CVE with a key (D-024)")]
-    out[/"Attack-path report<br/>chains ranked by likelihood × impact (D-026)<br/>format and layout: OPEN"/]
+    out[/"Attack-path report<br/>chains ranked by likelihood × impact (D-026)<br/>chains whose start isn't available<br/>listed after the rest (D-033)<br/>format and layout: OPEN"/]
     act["3. You read which attack paths<br/>are possible in your project"]
 
     repo --> trivy --> report --> tool
     report -.- q6
     key -.-> tool
+    ovr -.-> tool
     tool <-->|"live queries; a failed source<br/>doesn't stop the run (D-011)"| sources
     tool --> out --> act
 
@@ -31,6 +33,6 @@ flowchart LR
     classDef external fill:#ecfdf5,stroke:#059669,color:#111
     class trivy,tool,act decided
     class q6 open
-    class report,key,out data
+    class report,key,ovr,out data
     class repo,sources external
 ```

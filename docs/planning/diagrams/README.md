@@ -4,8 +4,9 @@ Agreed 2026-11-25. Diagrams are written in **Mermaid** inside Markdown, so they 
 
 - [01-end-to-end.md](01-end-to-end.md): what the user does before and after the tool, with the tool as one block.
 - [02-internal-pipeline.md](02-internal-pipeline.md): the tool's stages from Trivy JSON in to report out, with the data passed between them and external sources.
-- [03-chain-data-model.md](03-chain-data-model.md): findings, weighted CWEs, capabilities, links and chains, and how they relate.
+- [03-chain-data-model.md](03-chain-data-model.md): findings, weighted CWEs, capabilities, starting positions, links and chains, and how they relate.
 - [04-step-decision-tree.md](04-step-decision-tree.md): how one finding becomes a chain step: which rule sets its capabilities, its likelihood, and which chains it can join.
+- [05-attacker-model.md](05-attacker-model.md): which starting positions are available for a run, and how each chain's goal and starting position are judged.
 
 Each has a rendered PNG alongside it with the same name for viewing without a Mermaid renderer. The `.md` file is the source; the PNG is a snapshot of it.
 
